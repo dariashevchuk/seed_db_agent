@@ -1,24 +1,29 @@
-import logging, os
+import logging
+import os
+from logging.handlers import RotatingFileHandler
 
-def setup_logging(level: str | None = None) -> None:
+
+def setup_logging() -> None:
     """
-    Configure root logging once. Use LOG_LEVEL env (DEBUG, INFO, WARNING, ERROR).
+    Minimal, quiet-by-default logging with optional file output.
+    Env:
+      LOG_LEVEL=INFO|DEBUG|WARNING (default INFO)
+      LOG_TO_FILE=1 to also write data/run.log with rotation
     """
-    lvl_name = (level or os.getenv("LOG_LEVEL", "INFO")).upper()
-    lvl = getattr(logging, lvl_name, logging.INFO)
+    lvl = os.getenv("LOG_LEVEL", "INFO").upper()
+    lvl = getattr(logging, lvl, logging.INFO)
 
-    # Idempotent: do nothing if already configured.
-    if logging.getLogger().handlers:
-        logging.getLogger().setLevel(lvl)
-        return
+    fmt = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+    logging.basicConfig(level=lvl, format=fmt)
 
-    logging.basicConfig(
-        level=lvl,
-        format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-        datefmt="%H:%M:%S",
-    )
+    # Keep Playwright chatty logs down
+    for noisy in ("asyncio", "playwright", "httpx", "urllib3"):
+        logging.getLogger(noisy).setLevel(max(lvl, logging.WARNING))
 
-    # Quiet some chatty libs unless we asked for DEBUG.
-    if lvl > logging.DEBUG:
-        for noisy in ("asyncio", "urllib3", "httpx", "playwright"):
-            logging.getLogger(noisy).setLevel(max(lvl, logging.WARNING))
+    if os.getenv("LOG_TO_FILE") == "1":
+        fh = RotatingFileHandler(
+            "data/run.log", maxBytes=2_000_000, backupCount=3, encoding="utf-8"
+        )
+        fh.setLevel(lvl)
+        fh.setFormatter(logging.Formatter(fmt))
+        logging.getLogger().addHandler(fh)

@@ -1,6 +1,7 @@
+from __future__ import annotations
 import re, json
 from typing import Dict, Any, Optional, List
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urljoin
 from extruct import extract
 from w3lib.html import get_base_url
 import trafilatura
@@ -8,166 +9,105 @@ from readability import Document
 from markdownify import markdownify as _md
 
 EMAIL_RE = re.compile(r'[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}', re.I)
+A_TAG_RE = re.compile(r"<a\s+[^>]*href=[\"']([^\"'#]+)[\"'][^>]*>(.*?)</a>", re.I | re.S)
 
-# ---------- utils ----------
-def _canonical_site(url: str) -> Optional[str]:
+
+def canonical_host(url: str) -> Optional[str]:
     try:
-        parsed = urlparse(url)
-        scheme = parsed.scheme or "https"
-        netloc = parsed.netloc or parsed.path
-        if not netloc:
-            return None
-        host = netloc.lower()
-        if host.startswith("www."):
-            host = host[4:]
-        return urlunparse((scheme, host, "", "", "", ""))
+        netloc = urlparse(url).netloc.lower()
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        return netloc or None
     except Exception:
         return None
 
-def _first(d: Optional[Dict[str, Any]], keys: List[str]) -> Optional[str]:
-    if not d:
-        return None
-    for k in keys:
-        v = d.get(k)
-        if v:
-            return v
-    return None
 
-def _readable_text(html: str, url: Optional[str] = None) -> str:
+def same_site(u: str, root: str) -> bool:
+    cu, cr = canonical_host(u), canonical_host(root)
+    return bool(cu and cr and (cu == cr or cu.endswith("." + cr) or cr.endswith("." + cu)))
+
+
+def normalize_url(base: str, href: str) -> Optional[str]:
     try:
-        return trafilatura.extract(html, url=url) or ""
+        return urljoin(base, href.strip())
     except Exception:
-        return ""
+        return None
 
-def _jsonld_objects(html: str, url: str) -> List[Dict[str, Any]]:
-    base = get_base_url(html, url)
+
+def extract_jsonld_objects(html: str, url: str) -> List[Dict[str, Any]]:
     try:
+        base = get_base_url(html, url)
         data = extract(html, base_url=base, syntaxes=["json-ld"]).get("json-ld", [])
+        # Ensure dicts only
+        norm: List[Dict[str, Any]] = []
+        for obj in data:
+            if isinstance(obj, dict):
+                norm.append(obj)
+        return norm[:50]
     except Exception:
-        data = []
-    out: List[Dict[str, Any]] = []
-    for raw in data:
-        try:
-            obj = json.loads(raw) if isinstance(raw, str) else raw
-            if isinstance(obj, list):
-                out.extend([x for x in obj if isinstance(x, dict)])
-            elif isinstance(obj, dict):
-                out.append(obj)
-        except Exception:
+        return []
+
+
+def extract_anchors(html: str, base_url: str, limit: int = 200) -> List[Dict[str, str]]:
+    out: List[Dict[str, str]] = []
+    seen = set()
+    for m in A_TAG_RE.finditer(html or ""):
+        href = m.group(1).strip()
+        text = re.sub(r"\s+", " ", (m.group(2) or "").strip())
+        absu = normalize_url(base_url, href)
+        if not absu or absu in seen:
             continue
+        seen.add(absu)
+        out.append({"text": text[:200] if text else None, "href": absu})
+        if len(out) >= limit:
+            break
     return out
 
-# ---------- HTML → Markdown ----------
-def main_content_html(html: str) -> str:
-    try:
-        return Document(html).summary(html_partial=True)
-    except Exception:
-        return html
 
 def html_to_markdown(html: str) -> str:
-    article_html = main_content_html(html)
-    return _md(
-        article_html,
-        heading_style="ATX",
-        strip=["script", "style"],
-        autolinks=True,
-        bullets="*",
-    ).strip()
+    """Readable markdown: trafilatura -> readability -> markdownify fallback."""
+    if not html:
+        return ""
+    try:
+        txt = trafilatura.extract(html, include_comments=False) or ""
+        if len(txt.strip()) >= 150:
+            return txt.strip()
+    except Exception:
+        pass
 
-# ---------- signal extractors ----------
-def org_signals(fetch: Dict[str, Any]) -> Dict[str, Any]:
-    html = fetch.get("html") or ""
-    url = fetch.get("url") or ""
-    meta = fetch.get("metas") or {}
-    title = (fetch.get("title") or "").strip()
-    h1 = (fetch.get("h1") or "").strip()
+    try:
+        d = Document(html)
+        content = d.summary(html_partial=True)
+        md = _md(content or html)
+        return md.strip()
+    except Exception:
+        try:
+            return _md(html).strip()
+        except Exception:
+            return ""
 
-    readable = _readable_text(html, url)
-    jsonld = _jsonld_objects(html, url)
 
-    ld_org = None
-    for obj in jsonld:
-        typ = obj.get("@type")
-        types = [t.lower() for t in (typ if isinstance(typ, list) else [typ]) if t]
-        if any(t in ("organization", "ngo", "corporation", "localbusiness") for t in types):
-            ld_org = obj
-            break
+def bootstrap_site_hints(url: str, html: str) -> Dict[str, Any]:
+    """Lightweight hints: title/meta/og, best-guess email."""
+    title_m = re.search(r"<title[^>]*>(.*?)</title>", html or "", re.I | re.S)
+    title = (title_m.group(1) or "").strip() if title_m else None
 
-    name = None
-    website = None
-    email = None
-    if ld_org:
-        name = ld_org.get("name") or ld_org.get("legalName")
-        website = ld_org.get("url")
-        email = ld_org.get("email")
-        cp = ld_org.get("contactPoint")
-        if not email and isinstance(cp, dict):
-            email = cp.get("email")
+    def _meta(name: str) -> Optional[str]:
+        m = re.search(rf'<meta[^>]+name=["\']{re.escape(name)}["\'][^>]+content=["\'](.*?)["\']', html or "", re.I)
+        if m:
+            return (m.group(1) or "").strip()
+        m = re.search(rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\'](.*?)["\']', html or "", re.I)
+        return (m.group(1) or "").strip() if m else None
 
-    # **Better priority**: h1 → title → og:site_name → twitter:title
-    if not name:
-        name = h1 or title or _first(meta, ["og:site_name"]) or _first(meta, ["twitter:title"])
+    site_name = _meta("og:site_name") or _meta("twitter:site") or canonical_host(url)
+    description = _meta("description") or _meta("og:description") or _meta("twitter:description")
 
-    if not website:
-        website = _canonical_site(url)
-
-    if not email:
-        m = EMAIL_RE.search(readable)
-        email = m.group(0) if m else None
-
-    meta_desc = _first(meta, ["description", "og:description", "twitter:description"])
-    desc = meta_desc or (readable[:600] if readable else None)
+    emails = set(e.lower() for e in EMAIL_RE.findall(html or ""))
+    best_email = next(iter(emails)) if emails else None
 
     return {
-        "name": (name or "").strip(),
-        "website": website,
-        "contact_email": email,
-        "description": (desc or None),
-    }
-
-def project_signals(fetch: Dict[str, Any]) -> Dict[str, Any]:
-    html = fetch.get("html") or ""
-    url = fetch.get("url") or ""
-    meta = fetch.get("metas") or {}
-    title = (fetch.get("title") or "").strip()
-    h1 = (fetch.get("h1") or "").strip()
-
-    readable = _readable_text(html, url)
-    jsonld = _jsonld_objects(html, url)
-
-    ld_proj = None
-    org_name = None
-    org_site = None
-
-    for obj in jsonld:
-        typ = obj.get("@type")
-        types = [t.lower() for t in (typ if isinstance(typ, list) else [typ]) if t]
-        if any(t in ("project", "creativework", "product", "dataset", "softwareapplication") for t in types):
-            ld_proj = obj
-        pub = obj.get("publisher") or obj.get("creator") or obj.get("author")
-        if isinstance(pub, dict):
-            org_name = org_name or pub.get("name")
-            org_site = org_site or pub.get("url")
-
-    name = None
-    desc = None
-    if ld_proj:
-        name = ld_proj.get("name") or ld_proj.get("headline") or ld_proj.get("title")
-        desc = ld_proj.get("description") or ld_proj.get("abstract")
-
-    if not name:
-        name = h1 or _first(meta, ["og:title", "twitter:title"]) or title
-    if not desc:
-        desc = _first(meta, ["description", "og:description", "twitter:description"]) or (readable[:600] if readable else None)
-
-    if not org_name:
-        org_name = _first(meta, ["og:site_name"])
-    if not org_site:
-        org_site = _canonical_site(url)
-
-    return {
-        "name": (name or "").strip(),
-        "description": (desc or None),
-        "organization_name": org_name,
-        "organization_website": org_site,
+        "title": title,
+        "site_name": site_name,
+        "meta_description": description,
+        "best_email": best_email,
     }
