@@ -1,0 +1,10 @@
+playwright>=1.45
+typer>=0.12
+pydantic>=2.7
+extruct>=0.16
+w3lib>=2.2
+trafilatura>=1.8
+readability-lxml>=0.8
+markdownify>=0.13
+openai>=1.52
+python-dotenv>=1.0
