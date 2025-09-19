@@ -1,0 +1,102 @@
+[
+  {
+    "id": "disinformation",
+    "name": "Дезінформація",
+    "description": "Поширення фейкової інформації та підроблених даних у соцмережах.",
+    "solutions": ["Підтримка діяльності журналістів-розслідувачів"],
+    "terms": ["дезінформація", "фейкові новини", "фактчекінг", "fact-checking", "media literacy", "disinformation", "fake news", "фактчек"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube"]
+  },
+  {
+    "id": "political_accountability",
+    "name": "Толерантність до політичних злочинців",
+    "description": "Обурення щодо безкарності та нормалізації політичних злочинів.",
+    "solutions": ["Підписання відповідних петицій", "Підтримка діяльності специфічних організацій"],
+    "terms": ["політичні злочини", "відповідальність посадовців", "антикорупція", "watchdog", "political accountability", "transitional justice", "anti-corruption", "петиція"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube|party|партія|campaign"]
+  },
+  {
+    "id": "vulnerable_groups_rights",
+    "name": "Правозахист і допомога вразливим групам",
+    "description": "Ігнорування прав літніх людей, ветеранів, людей з інвалідністю тощо.",
+    "solutions": ["Підтримка правозахисників, юристів і кризових психологів", "Підтримка діяльності відповідних організацій"],
+    "terms": ["правозахист", "безоплатна правова допомога", "disability rights", "human rights defenders", "free legal aid", "ветерани права", "senior support"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube"]
+  },
+  {
+    "id": "school_crisis_teachers",
+    "name": "Криза шкільного середовища і роль вчителя",
+    "description": "Діти з тривогою, вчителі на виснаженні — бракує системної підтримки.",
+    "solutions": ["Донати на програми шкільної психології", "Супервізії для педагогів", "Гідна оплата праці"],
+    "terms": ["шкільна психологія", "підтримка вчителів", "супервізія педагогів", "school psychology", "teacher burnout", "teacher supervision", "mental health in schools"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube|school fees|commercial course"]
+  },
+  {
+    "id": "accessibility_inclusion",
+    "name": "Інклюзія: доступність як норма, а не церемонія",
+    "description": "Пандуси, ліфти, тактильні смуги — базова повага і щоденний стандарт.",
+    "solutions": ["Внески у місцеві проєкти доступності", "Підтримка інклюзивних громадських просторів"],
+    "terms": ["доступність", "інклюзія", "універсальний дизайн", "accessibility", "inclusive design", "universal design", "ramps", "wheelchair access"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube|agency portfolio|case study"]
+  },
+  {
+    "id": "urban_noise_transport",
+    "name": "Шум і транспорт: тиша як право",
+    "description": "Підтримка ініціатив тихих вулиць, техконтролю та громадського транспорту.",
+    "solutions": ["Підтримати ініціативи «тихих вулиць»", "Техконтроль транспорту", "Розвиток громадського транспорту"],
+    "terms": ["тихі вулиці", "шумове забруднення", "urban noise", "traffic calming", "public transport", "low emission zone", "air quality"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube|consulting offer"]
+  },
+  {
+    "id": "mental_health_resilience",
+    "name": "Психічне здоров’я та емоційна стійкість",
+    "description": "Безкоштовні консультації, групи підтримки, реабілітація для цивільних і військових.",
+    "solutions": ["Донати на безкоштовні консультації", "Групи підтримки", "Програми психологічної допомоги для цивільних і військових"],
+    "terms": ["психологічна допомога", "групи підтримки", "реабілітація", "mental health", "PTSD support", "veteran mental health", "free counseling", "helpline"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["clinic ad|private practice|job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube"]
+  },
+  {
+    "id": "stray_animals",
+    "name": "Громади і безпритульні тварини",
+    "description": "Стерилізаційні програми, притулки та адопція.",
+    "solutions": ["Підтримати стерилізаційні програми", "Притулки", "Адопція"],
+    "terms": ["притулок тварин", "стерилізація тварин", "адопція", "animal shelter", "spay neuter", "adoption", "TNR"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie|towarzystwo"],
+    "must_not": ["pet store|breeder|classifieds|olx|allegro|job|vacancy|linkedin|facebook|instagram|twitter|newsroom|press|youtube"]
+  },
+  {
+    "id": "economic_hardship",
+    "name": "Економічна ситуація",
+    "description": "Кухні для вразливих родин, продуктові набори, локальні гуманітарні штаби.",
+    "solutions": ["Кухні для вразливих родин", "Продуктові набори", "Локальні гуманітарні штаби"],
+    "terms": ["гуманітарна допомога", "продуктові набори", "соціальна кухня", "food bank", "community kitchen", "humanitarian relief", "local aid"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["restaurant|catering|job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube"]
+  },
+  {
+    "id": "language_culture",
+    "name": "Мова і культура",
+    "description": "Підтримка мовних курсів, бібліотек і культурних подій.",
+    "solutions": ["Підтримка мовних курсів", "Бібліотеки", "Культурні події"],
+    "terms": ["мовні курси", "бібліотека фонд", "культурні події", "language courses nonprofit", "library foundation", "cultural events NGO", "community arts"],
+    "tld_bias": [".org", ".ngo", ".org.ua", ".org.pl"],
+    "must": ["фонд|організація|благодійн|nonprofit|charity|fundacja|foundation|stowarzyszenie"],
+    "must_not": ["school fees|commercial course|job|vacancy|rekrutacja|linkedin|facebook|instagram|twitter|newsroom|press|youtube"]
+  }
+]
